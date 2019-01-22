@@ -3,7 +3,7 @@ reader_network - A package of utilities to record and work with
 multicast radar data in ASTERIX format. (radar as in air navigation
 surveillance).
 
-Copyright (C) 2002-2015 Diego Torres <diego dot torres at gmail dot com>
+Copyright (C) 2002-2019 Diego Torres <diego dot torres at gmail dot com>
 
 This file is part of the reader_network utils.
 
@@ -412,7 +412,7 @@ int index = 0;
 	struct datablock_plot dbp;
 
 	memset(&dbp, 0, sizeof(struct datablock_plot));
-//	log_printf(LOG_NORMAL, "fspec %02X\n", ptr_raw[0]);
+	// log_printf(LOG_NORMAL, "a)CAT01] fspec %02X\n", ptr_raw[0]);
 
 	sizeFSPEC = ast_get_size_FSPEC(ptr_raw, size_datablock);
 	dbp.cat = CAT_01;
@@ -442,13 +442,13 @@ int index = 0;
 	}
 	if ( ptr_raw[0] & 64 ) { //I001/010
 	    if ( ptr_raw[j] & 128 ) { // track
-		//log_printf(LOG_NORMAL, "type %02X TRACK\n", ptr_raw[j]);
+		// log_printf(LOG_NORMAL, "b)CAT01] type %02X TRACK\n", ptr_raw[j]);
 	        dbp.available |= IS_TRACK;
 		size_current = size_datablock - 3; //exit without further decompression
 
 	    } else { // plot
 		dbp.available |= IS_TYPE;
-		//log_printf(LOG_NORMAL, "type %02X\n", ptr_raw[j]);
+		// log_printf(LOG_NORMAL, "c)CAT01] type %02X\n", ptr_raw[j]);
 
 		if ( (!(ptr_raw[j] & 32)) && (!(ptr_raw[j] & 16)) ) {
 		    dbp.type = NO_DETECTION;
@@ -522,15 +522,16 @@ int index = 0;
 		}
 	    }
 	}
-//	ast_output_datablock(ptr_raw, j , dbp.id, dbp.index);
+	// ast_output_datablock(ptr_raw, j , dbp.id, dbp.index);
 //	if ( (dbp.available & IS_TYPE) && (dbp.available & IS_TOD) ) {
 	if ( dbp.available & IS_TYPE ) {
-/*	    log_printf(LOG_NORMAL, "%3.3f %3.3f %3.3f\n", dbp.tod_stamp, dbp.tod, dbp.tod_stamp - dbp.tod);
-	    if ((dbp.tod_stamp - dbp.tod < 0) || ((dbp.tod_stamp - dbp.tod > 5)) ) {
+	    // log_printf(LOG_NORMAL, "dbp tod_stamp(%3.3f) tod(%3.3f) diff(%3.3f)\n", dbp.tod_stamp, dbp.tod, dbp.tod_stamp - dbp.tod);
+/*	    if ((dbp.tod_stamp - dbp.tod < 0) || ((dbp.tod_stamp - dbp.tod > 5)) ) {
 		log_printf(LOG_NORMAL, "%3.3f %3.3f %3.3f\n", dbp.tod_stamp, dbp.tod, dbp.tod_stamp - dbp.tod);	
 		exit(EXIT_FAILURE);
 	    }
 */	    if (enviar) {
+                usleep(10);
 		if (sendto(s_output_multicast, &dbp, sizeof(dbp), 0, (struct sockaddr *) &srvaddr, sizeof(srvaddr)) < 0) { // CAT001
 		    log_printf(LOG_ERROR, "ERROR sendto: %s\n", strerror(errno));
 		}
@@ -547,57 +548,63 @@ int index = 0;
 }
 
 int ast_procesarCAT02(unsigned char *ptr_raw, ssize_t size_datablock, unsigned long id, bool enviar) {
-int sizeFSPEC=0, pos=0;
-struct datablock_plot dbp;
 
+//  do
+    {
 
-    memset(&dbp, 0, sizeof(struct datablock_plot));
-    dbp.plot_type = IS_ERROR;
-    dbp.tod_stamp = current_time_today;
-    dbp.flag_test = 0;
-    dbp.id = id;
-    dbp.index = 0;
-    sizeFSPEC = ast_get_size_FSPEC(ptr_raw, size_datablock);
+        int sizeFSPEC=0, pos=0;
+        struct datablock_plot dbp;
 
-//    log_printf(LOG_ERROR, "a)CAT02] (%d) %02X %02X\n", sizeFSPEC, ptr_raw[sizeFSPEC], ptr_raw[sizeFSPEC+1] );
+        memset(&dbp, 0, sizeof(struct datablock_plot));
+        dbp.plot_type = IS_ERROR;
+        dbp.tod_stamp = current_time_today;
+        dbp.flag_test = 0;
+        dbp.id = id;
+        dbp.index = 0;
+        sizeFSPEC = ast_get_size_FSPEC(ptr_raw, size_datablock);
+        // log_printf(LOG_ERROR, "a)CAT02] (%d) %02X %02X\n", sizeFSPEC, ptr_raw[sizeFSPEC], ptr_raw[sizeFSPEC+1] );
 
-    if ( (ptr_raw[0] & 128) && // sac/sic
-	 (ptr_raw[0] & 64) &&  // msg type
-	 (ptr_raw[0] & 16) ) { // timeofday
-    
-//	log_printf(LOG_ERROR, "b)CAT02] (%d) %02X %02X \n", sizeFSPEC, ptr_raw[sizeFSPEC], ptr_raw[sizeFSPEC+1] );
+        if ( (ptr_raw[0] & 128) && // sac/sic
+    	    (ptr_raw[0] & 64) &&  // msg type
+            (ptr_raw[0] & 16) ) { // timeofday
 
-	if (ptr_raw[0] & 32) pos++;
+            // log_printf(LOG_ERROR, "b)CAT02] (%d) %02X %02X \n", sizeFSPEC, ptr_raw[sizeFSPEC], ptr_raw[sizeFSPEC+1] );
+            if (ptr_raw[0] & 32) pos++;
 	
-	pos += sizeFSPEC + 3; //FSPEC SACSIC MSGTYPE
-	
-//	log_printf(LOG_ERROR, "c)CAT02] (%d) %02X %02X \n", sizeFSPEC, ptr_raw[sizeFSPEC], ptr_raw[sizeFSPEC+1] );
-	
-	ttod_put_full(ptr_raw[sizeFSPEC], ptr_raw[sizeFSPEC + 1], ptr_raw + pos);
+	    pos += sizeFSPEC + 3; //FSPEC SACSIC MSGTYPE
+            // log_printf(LOG_ERROR, "c)CAT02] (%d) %02X %02X \n", sizeFSPEC, ptr_raw[sizeFSPEC], ptr_raw[sizeFSPEC+1] );
+	    ttod_put_full(ptr_raw[sizeFSPEC], ptr_raw[sizeFSPEC + 1], ptr_raw + pos);
 
-	dbp.cat = CAT_02;
-	dbp.sac = ptr_raw[sizeFSPEC]; dbp.sic = ptr_raw[sizeFSPEC+1];
-	dbp.available = IS_TOD | IS_TYPE | IS_SACSIC;
-	dbp.tod = ((float)(ptr_raw[pos]*256*256 + ptr_raw[pos+1]*256 + ptr_raw[pos+2]))/128.0;
-	//if (dbp.sac == 1 && dbp.sic==1) {
-	//    ast_output_datablock(ptr_raw, size_datablock - 3, dbp.id, dbp.index);
-	//}
-	switch(ptr_raw[sizeFSPEC+2]) {
-	    case 1: dbp.type = TYPE_C2_NORTH_MARKER;			break;
-	    case 2: dbp.type = TYPE_C2_SECTOR_CROSSING;			break;
-	    case 3: dbp.type = TYPE_C2_SOUTH_MARKER;			break;
-	    case 8: dbp.type = TYPE_C2_START_BLIND_ZONE_FILTERING;	break;
-	    case 9: dbp.type = TYPE_C2_STOP_BLIND_ZONE_FILTERING;	break;
-	    default: dbp.type = NO_DETECTION;				break;
-	}
-	if (enviar) {
-            if (sendto(s_output_multicast, &dbp, sizeof(dbp), 0, (struct sockaddr *) &srvaddr, sizeof(srvaddr)) < 0) { // CAT002
-		log_printf(LOG_ERROR, "ERROR sendto: %s\n", strerror(errno));
+    	    dbp.cat = CAT_02;
+	    dbp.sac = ptr_raw[sizeFSPEC]; dbp.sic = ptr_raw[sizeFSPEC+1];
+	    dbp.available = IS_TOD | IS_TYPE | IS_SACSIC;
+	    dbp.tod = ((float)(ptr_raw[pos]*256*256 + ptr_raw[pos+1]*256 + ptr_raw[pos+2]))/128.0;
+	    //if (dbp.sac == 104 && dbp.sic==1) {
+	        // log_printf(LOG_ERROR, "d)CAT02] datablock follows:\n");
+	        // ast_output_datablock(ptr_raw, size_datablock - 3, dbp.id, dbp.index);
+	    //}
+	    switch(ptr_raw[sizeFSPEC+2]) {
+	        case 1: dbp.type = TYPE_C2_NORTH_MARKER;		break;
+    	        case 2: dbp.type = TYPE_C2_SECTOR_CROSSING;		break;
+    	        case 3: dbp.type = TYPE_C2_SOUTH_MARKER;		break;
+	        case 8: dbp.type = TYPE_C2_START_BLIND_ZONE_FILTERING;	break;
+	        case 9: dbp.type = TYPE_C2_STOP_BLIND_ZONE_FILTERING;	break;
+	        default: dbp.type = NO_DETECTION;			break;
 	    }
-        } else {
+	    // log_printf(LOG_ERROR, "e)CAT02] dbp.type(%d) db.tod(%3.3f) dbp.available(%d)\n", dbp.type, dbp.tod, dbp.available);
+	    if (enviar) {
+	        usleep(10);
+                if (sendto(s_output_multicast, &dbp, sizeof(dbp), 0, (struct sockaddr *) &srvaddr, sizeof(srvaddr)) < 0) { // CAT002
+		    log_printf(LOG_ERROR, "ERROR sendto: %s\n", strerror(errno));
+	        }
+            } else {
 		update_calculations(&dbp);
-	}
+	    }
+        }
+
     }
+    // while ((size_current + 3) < size_datablock);
+
     return T_OK;
 }
 
@@ -633,6 +640,7 @@ struct datablock_plot dbp;
 			(ptr_raw[sizeFSPEC + 4]<<8) + 
 			(ptr_raw[sizeFSPEC + 5])) / 128.0;
 	    if (enviar) {
+	        usleep(10);
 		if (sendto(s_output_multicast, &dbp, sizeof(dbp), 0, (struct sockaddr *) &srvaddr, sizeof(srvaddr)) < 0) { // CAT008
 		    log_printf(LOG_ERROR, "ERROR sendto: %s\n", strerror(errno));
 		    exit(EXIT_FAILURE);
@@ -707,6 +715,7 @@ int index = 0;
 		case 7: dbp.plot_type = TYPE_C10_PLOT_OTHER; break;
 		default: dbp.plot_type = NO_DETECTION;
 	    }
+	    if ( (ptr_raw[j] & 8) == 8 ) { dbp.source = SOURCE_CHANNEL2; } else { dbp.source = SOURCE_CHANNEL1; }
 	    while (ptr_raw[j] & 1) { j++; size_current++; }; j++;size_current++;
 	}
 	if ( ptr_raw[0] & 16 ) { //I010/140
@@ -728,7 +737,13 @@ int index = 0;
 	    if ( ptr_raw[1] & 128 ) { /* I010/200 */ j +=4; size_current += 4; }
 	    if ( ptr_raw[1] & 64 ) { /* I010/202 */ j +=4; size_current += 4; }
 	    if ( ptr_raw[1] & 32 ) { /* I010/161 */ j +=2; size_current += 2; }
-	    if ( ptr_raw[1] & 16 ) { /* I010/170 */ while (ptr_raw[j] & 1) { j++; size_current++; }; j++;size_current++; }
+	    // cambiamos la definición del I010/170 para mirar si el TRE está definido
+	    // comprobamos solo si el normal y un extent. Si hubiese más, fallaría la
+	    // descodificación, pero también es cierto que incumple el estandar.
+	    if ( ptr_raw[1] & 16 ) { /* I010/170 */
+	        if ( ptr_raw[j] & 64 ) { dbp.plot_type = NO_DETECTION; }
+	        while (ptr_raw[j] & 1) { j++; size_current++; } j++;size_current++;
+	    }
 	    if ( ptr_raw[1] & 8 ) { /* I010/060 */ j +=2; size_current += 2; }
 	    if ( ptr_raw[1] & 4 ) { /* I010/220 */ j +=3; size_current += 3; }
 	    if ( ptr_raw[1] & 2 ) { /* I010/245 */ j +=7; size_current += 7; }
@@ -761,11 +776,14 @@ int index = 0;
 	    }
 */
 	    if (enviar) {
+                usleep(10);
 		if (sendto(s_output_multicast, &dbp, sizeof(dbp), 0, (struct sockaddr *) &srvaddr, sizeof(srvaddr)) < 0) { // CAT010
 		    log_printf(LOG_ERROR, "ERROR sendto: %s\n", strerror(errno));
 		}
 	    } else {
-	        if ( (dbp.type & TYPE_C10_TARGET_REPORT) == TYPE_C10_TARGET_REPORT ) {
+	        if ( 
+	        (((dbp.type & TYPE_C10_TARGET_REPORT) == TYPE_C10_TARGET_REPORT) && (dbp.plot_type != NO_DETECTION)) ||
+	        ((dbp.type & TYPE_C10_START_UPDATE_CYCLE) == TYPE_C10_START_UPDATE_CYCLE) ) {
 		    update_calculations(&dbp);
 		}
 	    }
@@ -809,6 +827,7 @@ struct datablock_plot dbp;
 	    default: dbp.type = IS_ERROR;				break;
 	}
 	if (enviar) {
+            usleep(10);
             if (sendto(s_output_multicast, &dbp, sizeof(dbp), 0, (struct sockaddr *) &srvaddr, sizeof(srvaddr)) < 0) { // CAT019
 		log_printf(LOG_ERROR, "ERROR sendto: %s\n", strerror(errno));
 	    }
@@ -944,6 +963,7 @@ int index = 0;
 		exit(EXIT_FAILURE);
 //	    }
 */	    if (enviar) {
+                usleep(10);
 		if (sendto(s_output_multicast, &dbp, sizeof(dbp), 0, (struct sockaddr *) &srvaddr, sizeof(srvaddr)) < 0) { // CAT020
 		    log_printf(LOG_ERROR, "ERROR sendto: %s\n", strerror(errno));
 		}
@@ -1071,6 +1091,7 @@ int index = 0;
 	    }
 */
 	    if (enviar) {
+                usleep(10);
 		if (sendto(s_output_multicast, &dbp, sizeof(dbp), 0, (struct sockaddr *) &srvaddr, sizeof(srvaddr)) < 0) { // CAT021
 		    log_printf(LOG_ERROR, "ERROR sendto: %s\n", strerror(errno));
 		}
@@ -1136,6 +1157,7 @@ int index = 0;
 	    dbp.tod = ((float)(ptr_raw[j]*256*256 + ptr_raw[j+1]*256 + ptr_raw[j+2]))/128.0;
 	    size_current += 3; j += 3;
 	    if (enviar) {
+	        usleep(10);
 		if (sendto(s_output_multicast, &dbp, sizeof(dbp), 0, (struct sockaddr *) &srvaddr, sizeof(srvaddr)) < 0) { // CAT034
 		    log_printf(LOG_ERROR, "ERROR sendto: %s\n", strerror(errno));
 		}
@@ -1419,6 +1441,7 @@ unsigned char *datablock_start = NULL;
             }
             */
 	    if (enviar) {
+                usleep(10);
 		if (sendto(s_output_multicast, &dbp, sizeof(dbp), 0, (struct sockaddr *) &srvaddr, sizeof(srvaddr)) < 0) { // CAT048
 		    log_printf(LOG_ERROR, "ERROR sendto: %s\n", strerror(errno));
 		}
