@@ -3,7 +3,7 @@ reader_network - A package of utilities to record and work with
 multicast radar data in ASTERIX format. (radar as in air navigation
 surveillance).
 
-Copyright (C) 2002-2019 Diego Torres <diego dot torres at gmail dot com>
+Copyright (C) 2002-2025 Diego Torres <diego dot torres at gmail dot com>
 
 This file is part of the reader_network utils.
 
@@ -21,9 +21,8 @@ You should have received a copy of the GNU General Public License
 along with reader_network. If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#define VERSION "0.73"
-#define COPYRIGHT_NOTICE " v%s Copyright (C) 2002 - 2019 Diego Torres\n\n" \
+#define VERSION "0.81"
+#define COPYRIGHT_NOTICE " v%s Copyright (C) 2002 - 2026 Diego Torres\n\n" \
     "This program comes with ABSOLUTELY NO WARRANTY.\n" \
     "This is free software, and you are welcome to redistribute it\n" \
     "under certain conditions; see COPYING file for details.\n\n"
@@ -35,7 +34,7 @@ along with reader_network. If not, see <http://www.gnu.org/licenses/>.
 #define ARCH "LNX"
 #endif
 
-#define TEXT_LENGTH_SHORT 4
+#define TEXT_LENGTH_SHORT 5
 #define TEXT_LENGTH_LONG  20
 
 #define MULTICAST_PLOTS_GROUP "224.0.0.49"
@@ -44,9 +43,9 @@ along with reader_network. If not, see <http://www.gnu.org/licenses/>.
 #define UNICAST_PLOTS "172.88.2.221"
 #define UNICAST_PLOTS_PORT 4001
 
-#define MAX_PACKET_LENGTH 65532
+#define RN_MAX_PACKET_LENGTH 65532
 
-#define MAX_RADAR_NUMBER 64
+#define MAX_RADAR_NUMBER 256
 #define MAX_SEGMENT_NUMBER 3200
 
 #define UPDATE_TIME 300.0
@@ -55,10 +54,9 @@ along with reader_network. If not, see <http://www.gnu.org/licenses/>.
 
 #define SELECT_TIMEOUT 10
 
-#define SCRM_MAX_QUEUE_SIZE 5000
+#define SCRM_MAX_QUEUE_SIZE 2500
 #define SCRM_TIMEOUT 4
 
 #define DEST_FILE_FORMAT_UNKNOWN 1
 #define DEST_FILE_FORMAT_AST 2
 #define DEST_FILE_FORMAT_GPS 4
-

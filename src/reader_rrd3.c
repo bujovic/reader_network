@@ -3,7 +3,7 @@ reader_network - A package of utilities to record and work with
 multicast radar data in ASTERIX format. (radar as in air navigation
 surveillance).
 
-Copyright (C) 2002-2018 Diego Torres <diego dot torres at gmail dot com>
+Copyright (C) 2002-2019 Diego Torres <diego dot torres at gmail dot com>
 
 This file is part of the reader_network utils.
 
@@ -861,7 +861,7 @@ int main(int argc, char *argv[]) {
 	    exit(EXIT_FAILURE);
 	}
 	//log_printf(LOG_ERROR, "readed %ld bytes\n", (unsigned long) ast_size_total);
-        if (source_file_gps_version == 0) {
+        if ( 0 == source_file_gps_version ) {
 	    unsigned char *memcmp1;
 	    memcmp1 = (unsigned char *) mem_alloc(20);
 	    memcmp1 = memset(memcmp1, 0xCD, 20);
@@ -873,8 +873,7 @@ int main(int argc, char *argv[]) {
 	        //log_printf(LOG_ERROR, "GPSv2 input auto-activated\n");
 	    }
 	    mem_free(memcmp1);
-	} else {
-	    if (source_file_gps_version == 1)
+	} else if ( 1 == source_file_gps_version ) {
 		ast_pos = 2200; offset = 10;
 	}
 
@@ -1041,6 +1040,12 @@ void update_calculations(struct datablock_plot *dbp) {
         if (fabs(dbp->tod_stamp  - last_tod_stamp) > 86000)
             midnight_t += 86400; // new day
         last_tod_stamp = dbp->tod_stamp;
+
+
+	//if (dbp->cat == 1 && dbp->sac==20 && dbp->sic==2 && dbp->tod_stamp>=(28800+300) && dbp->tod_stamp<(29100+300)) {
+	//    printf("%3.5f;%3.5f;%3.5f\n", dbp->tod_stamp, dbp->tod, diff);
+	//}
+
 
     }
 
